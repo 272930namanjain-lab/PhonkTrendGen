@@ -1,6 +1,5 @@
-import { type PhonkTrack, type InsertPhonkTrack, phonkTracks } from "@shared/schema";
-import { desc, eq } from "drizzle-orm";
-import { db } from "./db";
+import { type PhonkTrack, type InsertPhonkTrack } from "@shared/schema";
+import { nanoid } from "nanoid";
 
 export interface IStorage {
   // Phonk tracks
@@ -10,24 +9,35 @@ export interface IStorage {
   getRecentTracks(limit: number): Promise<PhonkTrack[]>;
 }
 
-export class PgStorage implements IStorage {
+export class MemoryStorage implements IStorage {
+  private tracks: Map<string, PhonkTrack> = new Map();
+
   async createTrack(insertTrack: InsertPhonkTrack): Promise<PhonkTrack> {
-    const [track] = await db.insert(phonkTracks).values(insertTrack).returning();
+    const id = nanoid();
+    const track: PhonkTrack = {
+      ...insertTrack,
+      id,
+      createdAt: new Date(),
+    };
+    this.tracks.set(id, track);
     return track;
   }
 
   async getTrack(id: string): Promise<PhonkTrack | undefined> {
-    const [track] = await db.select().from(phonkTracks).where(eq(phonkTracks.id, id));
-    return track;
+    return this.tracks.get(id);
   }
 
   async getAllTracks(): Promise<PhonkTrack[]> {
-    return await db.select().from(phonkTracks).orderBy(desc(phonkTracks.createdAt));
+    return Array.from(this.tracks.values()).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   }
 
   async getRecentTracks(limit: number = 20): Promise<PhonkTrack[]> {
-    return await db.select().from(phonkTracks).orderBy(desc(phonkTracks.createdAt)).limit(limit);
+    return Array.from(this.tracks.values())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, limit);
   }
 }
 
-export const storage = new PgStorage();
+export const storage = new MemoryStorage();
