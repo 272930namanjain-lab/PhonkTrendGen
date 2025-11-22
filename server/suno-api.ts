@@ -58,7 +58,7 @@ function generateMockAudioDataUrl(bpm: number, duration: number): string {
   // In production, this would be the actual audio URL from Suno API
   // For demo, we return a data URL with a simple audio tone
   const sampleRate = 44100;
-  const samples = duration * sampleRate;
+  const samples = Math.min(duration * sampleRate, 44100 * 120); // Cap at 2 minutes
   const frequency = (bpm / 60) * 2; // Beat frequency based on BPM
   
   // Create a simple synthesized beat pattern
@@ -89,15 +89,20 @@ function generateMockAudioDataUrl(bpm: number, duration: number): string {
   // Generate simple phonk-style beat pattern
   for (let i = 0; i < samples; i++) {
     const t = i / sampleRate;
-    const kickPattern = Math.sin(2 * Math.PI * frequency * t) * Math.exp(-t % (60/bpm) * 10);
+    const kickPattern = Math.sin(2 * Math.PI * frequency * t) * Math.exp(-((t % (60/bpm)) * 10));
     const hihatPattern = (Math.random() - 0.5) * 0.3 * Math.sin(2 * Math.PI * frequency * 4 * t);
     const sample = Math.max(-1, Math.min(1, kickPattern + hihatPattern)) * 0.5;
     view.setInt16(44 + i * 2, sample * 32767, true);
   }
   
-  const blob = new Blob([buffer], { type: 'audio/wav' });
-  const base64 = Buffer.from(await blob.arrayBuffer()).toString('base64');
-  return `data:audio/wav;base64,${base64}`;
+  // Convert to base64
+  const bytes = new Uint8Array(buffer);
+  let base64 = '';
+  for (let i = 0; i < bytes.length; i++) {
+    base64 += String.fromCharCode(bytes[i]);
+  }
+  const encoded = typeof btoa !== 'undefined' ? btoa(base64) : Buffer.from(base64).toString('base64');
+  return `data:audio/wav;base64,${encoded}`;
 }
 
 function generateMockWaveform(duration: number): number[] {
