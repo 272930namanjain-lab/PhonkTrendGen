@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Music2, Zap, History, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,21 +6,43 @@ import MusicGenerator from "@/components/music-generator";
 import AudioPlayer from "@/components/audio-player";
 import TrackHistory from "@/components/track-history";
 import TrendingStyles from "@/components/trending-styles";
-import AdBanner from "@/components/ad-banner";
+import BannerAd from "@/components/admob/banner-ad";
+import InterstitialAd from "@/components/admob/interstitial-ad";
+import RewardedAd from "@/components/admob/rewarded-ad";
+import NativeAd from "@/components/admob/native-ad";
+import { loadAdMobScript } from "@/lib/admob";
 import heroImage from "@assets/generated_images/phonk_music_hero_background.png";
 import type { PhonkTrack } from "@shared/schema";
 
 export default function Home() {
   const [currentTrack, setCurrentTrack] = useState<PhonkTrack | null>(null);
   const [refreshHistory, setRefreshHistory] = useState(0);
+  const [generationCount, setGenerationCount] = useState(0);
+  const [showInterstitial, setShowInterstitial] = useState(false);
+  const [freeGenerations, setFreeGenerations] = useState(0);
+
+  // Load AdMob on mount
+  useEffect(() => {
+    loadAdMobScript();
+  }, []);
 
   const handleTrackGenerated = (track: PhonkTrack) => {
     setCurrentTrack(track);
     setRefreshHistory(prev => prev + 1);
+    setGenerationCount(prev => prev + 1);
+    
+    // Show interstitial ad after every 3 generations
+    if ((generationCount + 1) % 3 === 0) {
+      setShowInterstitial(true);
+    }
   };
 
   const handleTrackSelect = (track: PhonkTrack) => {
     setCurrentTrack(track);
+  };
+
+  const handleReward = () => {
+    setFreeGenerations(prev => prev + 5);
   };
 
   return (
@@ -77,8 +99,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Ad Banner */}
-      <AdBanner />
+      {/* Top Banner Ad */}
+      <BannerAd position="top" className="py-4" />
+
+      {/* Interstitial Ad Modal */}
+      <InterstitialAd 
+        isOpen={showInterstitial}
+        onClose={() => setShowInterstitial(false)}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12">
@@ -92,8 +120,22 @@ export default function Home() {
           </div>
           
           <div className="grid lg:grid-cols-5 gap-8">
-            <div className="lg:col-span-2">
+            <div className="lg:col-span-2 space-y-6">
               <MusicGenerator onTrackGenerated={handleTrackGenerated} />
+              
+              {/* Rewarded Ad Section */}
+              <div className="bg-card border border-border rounded-lg p-6">
+                <h4 className="font-semibold mb-2">Need More Generations?</h4>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Watch a quick ad to unlock 5 free track generations
+                </p>
+                <RewardedAd onReward={handleReward} />
+                {freeGenerations > 0 && (
+                  <p className="text-sm text-primary mt-2 font-semibold">
+                    ✓ {freeGenerations} free generations available!
+                  </p>
+                )}
+              </div>
             </div>
             
             <div className="lg:col-span-3">
@@ -113,6 +155,9 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* Native Ad in Middle */}
+        <NativeAd />
 
         {/* Trending Styles Section */}
         <section id="trending" className="mb-16">
@@ -139,6 +184,9 @@ export default function Home() {
           />
         </section>
       </div>
+
+      {/* Bottom Banner Ad */}
+      <BannerAd position="bottom" className="py-4 border-t border-border" />
 
       {/* Footer */}
       <footer className="border-t border-border mt-20 py-8">
