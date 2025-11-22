@@ -26,8 +26,8 @@
   --popover: 270 4% 94%;
   --popover-foreground: 270 5% 15%;
   --popover-border: 270 6% 90%;
-  --primary: 270 85% 35%;
-  --primary-foreground: 270 10% 98%;
+  --primary: 280 85% 55%;
+  --primary-foreground: 280 10% 98%;
   --secondary: 270 8% 88%;
   --secondary-foreground: 270 8% 18%;
   --muted: 270 6% 90%;
@@ -110,8 +110,8 @@
   --popover: 270 5% 14%;
   --popover-foreground: 270 3% 92%;
   --popover-border: 270 6% 17%;
-  --primary: 270 85% 35%;
-  --primary-foreground: 270 10% 98%;
+  --primary: 280 85% 55%;
+  --primary-foreground: 280 10% 98%;
   --secondary: 270 6% 18%;
   --secondary-foreground: 270 4% 92%;
   --muted: 270 6% 16%;

@@ -1,38 +1,33 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { type PhonkTrack, type InsertPhonkTrack, phonkTracks } from "@shared/schema";
+import { db } from "./db";
+import { desc, eq } from "drizzle-orm";
 
 export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  // Phonk tracks
+  createTrack(track: InsertPhonkTrack): Promise<PhonkTrack>;
+  getTrack(id: string): Promise<PhonkTrack | undefined>;
+  getAllTracks(): Promise<PhonkTrack[]>;
+  getRecentTracks(limit: number): Promise<PhonkTrack[]>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
+export class PgStorage implements IStorage {
+  async createTrack(insertTrack: InsertPhonkTrack): Promise<PhonkTrack> {
+    const [track] = await db.insert(phonkTracks).values(insertTrack).returning();
+    return track;
   }
 
-  async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+  async getTrack(id: string): Promise<PhonkTrack | undefined> {
+    const [track] = await db.select().from(phonkTracks).where(eq(phonkTracks.id, id));
+    return track;
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async getAllTracks(): Promise<PhonkTrack[]> {
+    return await db.select().from(phonkTracks).orderBy(desc(phonkTracks.createdAt));
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async getRecentTracks(limit: number = 20): Promise<PhonkTrack[]> {
+    return await db.select().from(phonkTracks).orderBy(desc(phonkTracks.createdAt)).limit(limit);
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new PgStorage();
