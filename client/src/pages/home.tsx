@@ -6,6 +6,7 @@ import MusicGenerator from "@/components/music-generator";
 import AudioPlayer from "@/components/audio-player";
 import TrackHistory from "@/components/track-history";
 import TrendingStyles from "@/components/trending-styles";
+import AdBanner from "@/components/ad-banner";
 import heroImage from "@assets/generated_images/phonk_music_hero_background.png";
 import type { PhonkTrack } from "@shared/schema";
 
@@ -75,6 +76,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Ad Banner */}
+      <AdBanner />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 lg:px-8 py-12">
