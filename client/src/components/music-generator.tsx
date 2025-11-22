@@ -45,8 +45,8 @@ export default function MusicGenerator({ onTrackGenerated }: MusicGeneratorProps
 
   const generateMutation = useMutation({
     mutationFn: async (data: GeneratorForm) => {
-      const response = await apiRequest<PhonkTrack>("POST", "/api/generate", data);
-      return response;
+      const response = await apiRequest("POST", "/api/generate", data);
+      return response as PhonkTrack;
     },
     onSuccess: (track) => {
       toast({
